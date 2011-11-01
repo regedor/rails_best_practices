@@ -37,6 +37,7 @@ module RailsBestPractices
       def lexical(filename, content)
         @lexicals.each do |lexical|
           lexical.check(filename, content)
+          lexical.increment_total_files_checked!
         end
       end
 
@@ -66,6 +67,7 @@ module RailsBestPractices
               checks.each { |check|                                    #     checks.each { |check|
                 if node.file =~ check.interesting_files                #       if node.file =~ check.interesting_files
                   check.node_end(node)                                 #         check.node_end(node)
+                  check.increment_total_files_checked!                 #         check.increment_total_files_checked!
                 end                                                    #       end
               }                                                        #     }
             end                                                        #   end

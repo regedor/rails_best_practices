@@ -14,6 +14,19 @@ module RailsBestPractices
       SCHEMA_FILE = /db\/schema\.rb/
       HELPER_FILES = /helpers.*\.rb$/
 
+      # Hash representation of the checker
+      def result
+        class_name = self.class.to_s.split("::")
+        { :checker_name  => class_name.last,
+          :checker_type  => class_name[-2],
+          :error_count   => errors.size,
+          :checker_url   => url, 
+	        :errors        => errors,
+	        :files_checked => total_files_checked
+        }
+      end
+      
+
       # default interesting nodes.
       def interesting_nodes
         []
@@ -71,6 +84,20 @@ module RailsBestPractices
       # @return [String] the url of rails best practice
       def url
         ""
+      end
+      
+      # default value is 0.
+      #
+      # @return [Integer] the number of files checked by this checker
+      def total_files_checked
+        @total_files_checked || 0
+      end
+      
+      # increments by one the number of files checked.
+      #
+      # @return [Integer] the number of files checked by this checker
+      def increment_total_files_checked!(increment=1)
+        @total_files_checked = total_files_checked + increment
       end
 
       # method_missing to catch all start and end process for each node type, like
