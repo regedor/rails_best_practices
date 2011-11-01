@@ -116,6 +116,13 @@ module RailsBestPractices
         (@reviews + @lexicals).collect {|check| check.errors}.flatten
       end
 
+      # get the results for all active checkers (reviews and lexicals).
+      #
+      # @return [Hash] all checkers details 
+      def results
+        (@reviews + @lexicals).map &:result
+      end
+
       # provide a handler after all files reviewed.
       def on_complete
         filename = "rails_best_practices.complete"
