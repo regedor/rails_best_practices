@@ -1,9 +1,9 @@
 # encoding: utf-8
-require 'rubygems'
-require 'ripper'
-require 'erubis'
 require 'yaml'
+require 'ripper'
 require 'active_support/inflector'
+require 'active_support/core_ext/object/blank'
+require 'active_support/core_ext/object/try'
 
 module RailsBestPractices
   module Core
@@ -36,7 +36,7 @@ module RailsBestPractices
       # @param [Hash] options pass the prepares and reviews.
       def initialize(options={})
         custom_config = File.join(Runner.base_path, 'config/rails_best_practices.yml')
-        @config = File.exists?(custom_config) ? custom_config : RailsBestPractices::DEFAULT_CONFIG
+        @config = File.exists?(custom_config) ? custom_config : RailsBestPractices::Analyzer::DEFAULT_CONFIG
 
         lexicals = Array(options[:lexicals])
         prepares = Array(options[:prepares])
@@ -94,7 +94,7 @@ module RailsBestPractices
       # @param [String] content content of the file
       def review(filename, content)
         puts filename if @debug
-        content = parse_erb_or_haml(filename, content)
+        content = parse_html_template(filename, content)
         node = parse_ruby(filename, content)
         if node
           node.file = filename
@@ -123,10 +123,22 @@ module RailsBestPractices
         (@reviews + @lexicals).map &:result
       end
 
+      # After lexical method.
+      def after_lexical; end
+
       # provide a handler after all files reviewed.
-      def on_complete
-        filename = "rails_best_practices.complete"
-        content = "class RailsBestPractices::Complete; end"
+      def after_prepare
+        filename = "rails_best_practices.after_prepare"
+        content = "class RailsBestPractices::AfterPrepare; end"
+        node = parse_ruby(filename, content)
+        node.file = filename
+        node.prepare(@checker)
+      end
+
+      # provide a handler after all files reviewed.
+      def after_review
+        filename = "rails_best_practices.after_review"
+        content = "class RailsBestPractices::AfterReview; end"
         node = parse_ruby(filename, content)
         node.file = filename
         node.review(@checker)
@@ -151,23 +163,32 @@ module RailsBestPractices
           end
         end
 
-        # parse erb or html code.
+        # parse html tempalte code, erb, haml and slim.
         #
-        # @param [String] filename is the filename of the erb or haml code.
-        # @param [String] content is the source code of erb or haml file.
-        def parse_erb_or_haml(filename, content)
-          if filename =~ /.*\.erb|.*\.rhtml$/
-            content = Erubis::Eruby.new(content).src
+        # @param [String] filename is the filename of the erb, haml or slim code.
+        # @param [String] content is the source code of erb, haml or slim file.
+        def parse_html_template(filename, content)
+          if filename =~ /.*\.erb$|.*\.rhtml$/
+            content = Erubis::OnlyRuby.new(content).src
           elsif filename =~ /.*\.haml$/
             begin
               require 'haml'
-              content = Haml::Engine.new(content).precompiled
+              content = Haml::Engine.new(content, {:ugly => true}).precompiled
               # remove \xxx characters
               content.gsub!(/\\\d{3}/, '')
             rescue LoadError
               raise "In order to parse #{filename}, please install the haml gem"
             rescue Haml::Error, SyntaxError
               # do nothing, just ignore the wrong haml files.
+            end
+          elsif filename =~ /.*\.slim$/
+            begin
+              require 'slim'
+              content = Slim::Engine.new.call(content)
+            rescue LoadError
+              raise "In order to parse #{filename}, please install the slim gem"
+            rescue SyntaxError
+              # do nothing, just ignore the wrong slim files
             end
           end
           content
@@ -189,7 +210,7 @@ module RailsBestPractices
 
         # load all prepares.
         def load_prepares
-          [Prepares::ModelPrepare.new, Prepares::MailerPrepare.new, Prepares::SchemaPrepare.new, Prepares::ControllerPrepare.new]
+          Prepares.constants.map { |prepare| Prepares.const_get(prepare).new }
         end
 
         # load all reviews according to configuration.

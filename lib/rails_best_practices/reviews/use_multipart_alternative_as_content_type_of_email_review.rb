@@ -14,16 +14,11 @@ module RailsBestPractices
     #   check class node to remember the class name,
     #   and check the method definition nodes to see if the corresponding mailer views exist or not.
     class UseMultipartAlternativeAsContentTypeOfEmailReview < Review
+      interesting_nodes :class, :def
+      interesting_files MAILER_FILES
+
       def url
         "http://rails-bestpractices.com/posts/41-use-multipart-alternative-as-content_type-of-email"
-      end
-
-      def interesting_nodes
-        [:class, :def]
-      end
-
-      def interesting_files
-        MAILER_FILES
       end
 
       # check class node to remember the ActionMailer class name.
@@ -47,6 +42,7 @@ module RailsBestPractices
         def rails2_canonical_mailer_views?(name)
           (exist?("#{name}.text.html.erb") && !exist?("#{name}.text.plain.erb")) ||
           (exist?("#{name}.text.html.haml") && !exist?("#{name}.text.plain.haml")) ||
+          (exist?("#{name}.text.html.slim") && !exist?("#{name}.text.plain.slim")) ||
           (exist?("#{name}.text.html.rhtml") && !exist?("#{name}.text.plain.rhtml"))
         end
 
@@ -54,8 +50,9 @@ module RailsBestPractices
         #
         # @param [String] name method name in action_mailer
         def rails3_canonical_mailer_views?(name)
-          (exist?("#{name}.html.erb") && !haml_or_erb_exists?("#{name}.text")) ||
-          (exist?("#{name}.html.haml") && !haml_or_erb_exists?("#{name}.text") )
+          (exist?("#{name}.html.erb") && !html_tempalte_exists?("#{name}.text")) ||
+          (exist?("#{name}.html.haml") && !html_tempalte_exists?("#{name}.text")) ||
+          (exist?("#{name}.html.slim") && !html_tempalte_exists?("#{name}.text"))
         end
 
         # check if the filename existed in the mailer directory.
@@ -63,9 +60,9 @@ module RailsBestPractices
           File.exist? File.join(mailer_directory, filename)
         end
 
-        # check if haml or erb exists
-        def haml_or_erb_exists?(filename)
-          exist?("#{filename}.erb") || exist?("#{filename}.haml")
+        # check if erb, haml or slim exists
+        def html_tempalte_exists?(filename)
+          exist?("#{filename}.erb") || exist?("#{filename}.haml") || exist?("#{filename}.slim")
         end
 
         # check if the method is a deliver_method.

@@ -2,8 +2,8 @@ require 'spec_helper'
 
 describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
   let(:runner) { RailsBestPractices::Core::Runner.new(
-    :prepares => [RailsBestPractices::Prepares::ModelPrepare.new, RailsBestPractices::Prepares::ControllerPrepare.new],
-    :reviews => RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview.new({'except_methods' => ['set_cache']})
+    :prepares => RailsBestPractices::Prepares::ModelPrepare.new,
+    :reviews => RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview.new({'except_methods' => ["*#set_cache"]})
   ) }
 
   context "private" do
@@ -25,7 +25,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
       runner.errors[0].to_s.should == "app/models/post.rb:4 - remove unused methods (Post#find_by_sql)"
     end
@@ -38,14 +38,14 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare('app/models/post.rb', content)
       runner.review('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
     it "should not remove unused methods with var_ref" do
       content =<<-EOF
       class Post < ActiveRecord::Base
-        def find;
+        def find
           find_by_sql
         end
         private
@@ -62,7 +62,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -76,7 +76,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare('app/models/post.rb', content)
       runner.review('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -100,7 +100,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -124,7 +124,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -150,7 +150,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -164,7 +164,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare('app/models/post.rb', content)
       runner.review('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -178,7 +178,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare('app/models/post.rb', content)
       runner.review('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -191,7 +191,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare('app/models/post.rb', content)
       runner.review('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
   end
@@ -204,7 +204,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.prepare('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
       runner.errors[0].to_s.should == "app/models/post.rb:2 - remove unused methods (Post#fetch)"
     end
@@ -224,7 +224,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -236,7 +236,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare('app/models/post.rb', content)
       runner.review('app/models/post.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -256,7 +256,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -276,7 +276,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -297,7 +297,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
     end
 
@@ -318,7 +318,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
     end
   end
@@ -341,7 +341,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
       runner.errors[0].to_s.should == "app/models/post.rb:3 - remove unused methods (Post#test)"
     end
@@ -372,7 +372,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review('app/controllers/posts_controller.rb', content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
   end
@@ -394,7 +394,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review("app/controllers/posts_controller.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -406,7 +406,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare("app/models/post.rb", content)
       runner.review("app/models/post.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
       runner.errors[0].to_s.should == "app/models/post.rb:2 - remove unused methods (Post#active)"
     end
@@ -429,7 +429,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review("app/controllers/posts_controller.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -441,7 +441,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare("app/models/post.rb", content)
       runner.review("app/models/post.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(1).errors
       runner.errors[0].to_s.should == "app/models/post.rb:2 - remove unused methods (Post#active)"
     end
@@ -465,7 +465,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review("app/controllers/posts_controller.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -486,7 +486,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review("app/controllers/posts_controller.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -507,7 +507,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review("app/controllers/posts_controller.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
 
@@ -528,7 +528,7 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       end
       EOF
       runner.review("app/controllers/posts_controller.rb", content)
-      runner.on_complete
+      runner.after_review
       runner.should have(0).errors
     end
   end
@@ -546,7 +546,124 @@ describe RailsBestPractices::Reviews::RemoveUnusedMethodsInModelsReview do
       EOF
       runner.prepare("app/models/post.rb", content)
       runner.review("app/models/post.rb", content)
-      runner.on_complete
+      runner.after_review
+      runner.should have(0).errors
+    end
+  end
+
+  context "callbacks" do
+    it "should not remove unused method" do
+      content =<<-EOF
+      class Post < ActiveRecord::Base
+        before_save :init_columns
+        after_destroy :remove_dependencies
+
+        protected
+          def init_columns; end
+          def remove_dependencies; end
+      end
+      EOF
+      runner.prepare("app/models/post.rb", content)
+      runner.review("app/models/post.rb", content)
+      runner.after_review
+      runner.should have(0).errors
+    end
+  end
+
+  context "validates" do
+    it "should not remove unused method" do
+      content =<<-EOF
+      class Post < ActiveRecord::Base
+        validate :valid_birth_date
+
+        protected
+          def valid_birth_date; end
+      end
+      EOF
+      runner.prepare("app/models/post.rb", content)
+      runner.review("app/models/post.rb", content)
+      runner.after_review
+      runner.should have(0).errors
+    end
+
+    it "should not remove unused method for validate_on_create and validate_on_update" do
+      content =<<-EOF
+      class Post < ActiveRecord::Base
+        validate_on_create :valid_email
+        validate_on_update :valid_birth_date
+
+        protected
+          def valid_email; end
+          def valid_birth_date; end
+      end
+      EOF
+      runner.prepare("app/models/post.rb", content)
+      runner.review("app/models/post.rb", content)
+      runner.after_review
+      runner.should have(0).errors
+    end
+
+    it "should not remove unused methods for to_param" do
+      content =<<-EOF
+      class Post < ActiveRecord::Base
+        def to_param
+          id
+        end
+      end
+      EOF
+      runner.prepare("app/models/post.rb", content)
+      runner.review("app/models/post.rb", content)
+      runner.after_review
+      runner.should have(0).errors
+    end
+  end
+
+  context "helper method" do
+    it "should not remove unused method for coommand_call collection_select" do
+      content =<<-EOF
+      class Category < ActiveRecord::Base
+        def indented_name; end
+      end
+      EOF
+      runner.prepare("app/models/category.rb", content)
+      runner.review("app/models/category.rb", content)
+      content =<<-EOF
+      <%= f.collection_select :parent_id, Category.all_hierarchic(except: @category), :id, :indented_name, {include_blank: true} %>
+      EOF
+      runner.review("app/views/categories/_form.html.erb", content)
+      runner.after_review
+      runner.should have(0).errors
+    end
+
+    it "should not remove unused method for command collection_select" do
+      content =<<-EOF
+      class Category < ActiveRecord::Base
+        def indented_name; end
+      end
+      EOF
+      runner.prepare("app/models/category.rb", content)
+      runner.review("app/models/category.rb", content)
+      content =<<-EOF
+      <%= collection_select :category, :parent_id, Category.all_hierarchic(except: @category), :id, :indented_name, {include_blank: true} %>
+      EOF
+      runner.review("app/views/categories/_form.html.erb", content)
+      runner.after_review
+      runner.should have(0).errors
+    end
+
+    it "should not remove unused method for options_from_collection_for_select" do
+      content =<<-EOF
+      class Category < ActiveRecord::Base
+        def indented_name; end
+      end
+      EOF
+      runner.prepare("app/models/category.rb", content)
+      runner.review("app/models/category.rb", content)
+      content =<<-EOF
+      <%= select_tag 'category', options_from_collection_for_select(Category.all_hierachic(except: @category), :id, :indented_name) %>
+      EOF
+      runner.review("app/views/categories/_form.html.erb", content)
+      runner.after_review
       runner.should have(0).errors
     end
   end

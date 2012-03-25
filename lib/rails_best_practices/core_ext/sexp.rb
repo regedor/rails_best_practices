@@ -21,12 +21,12 @@ class Sexp
   #     s(:@ident, "test", s(2, 12)
   #       => 2
   def line
-    if [:def, :command, :command_call, :call, :fcall, :method_add_arg, :method_add_block,
-      :var_ref, :const_ref, :const_path_ref, :class, :module, :if, :unless, :elsif, :binary,
+    if [:def, :defs, :command, :command_call, :call, :fcall, :method_add_arg, :method_add_block,
+      :var_ref, :vcall, :const_ref, :const_path_ref, :class, :module, :if, :unless, :elsif, :binary,
       :alias, :symbol_literal, :symbol, :aref].include? sexp_type
       self[1].line
     elsif :array == sexp_type
-      array_values[0].line
+      array_values.first.line
     else
       self.last.first if self.last.is_a? Array
     end
@@ -56,17 +56,20 @@ class Sexp
   #     :sexp_type => :call,
   #     :subject => "Post",
   #     :message => ["find", "new"]
+  #     :to_s => "devise"
   #
-  # the condition key is one of :sexp_type, :subject or :message,
+  # the condition key is one of :sexp_type, :subject, :message, :to_s,
   # the condition value can be Symbol, Array or Sexp.
   def grep_nodes(options)
     sexp_type = options[:sexp_type]
     subject = options[:subject]
     message = options[:message]
+    to_s = options[:to_s]
     self.recursive_children do |child|
       if (!sexp_type || (sexp_type.is_a?(Array) ? sexp_type.include?(child.sexp_type) : sexp_type == child.sexp_type)) &&
          (!subject || (subject.is_a?(Array) ? subject.include?(child.subject.to_s) : subject == child.subject.to_s)) &&
-         (!message || (message.is_a?(Array) ? message.include?(child.message.to_s) : message == child.message.to_s))
+         (!message || (message.is_a?(Array) ? message.include?(child.message.to_s) : message == child.message.to_s)) &&
+         (!to_s || (to_s.is_a?(Array) ? to_s.include?(child.to_s) : to_s == child.to_s))
         yield child
       end
     end
@@ -82,7 +85,7 @@ class Sexp
   #     :subject => s(:const, Post),
   #     :message => [:find, :new]
   #
-  # the condition key is one of :sexp_type, :subject, :message,
+  # the condition key is one of :sexp_type, :subject, :message, and to_s,
   # the condition value can be Symbol, Array or Sexp.
   def grep_node(options)
     result = RailsBestPractices::Core::Nil.new
@@ -295,13 +298,17 @@ class Sexp
     nodes = []
     case sexp_type
     when :args_add_block, :array
-      node = self[1]
-      while true
-        if [:args_add, :args_add_star].include? node.sexp_type
-          nodes.unshift node[2]
-          node = node[1]
-        elsif :args_new == node.sexp_type
-          break
+      if self[1].sexp_type == :args_new
+        nodes << self[2]
+      else
+        node = self[1]
+        while true
+          if [:args_add, :args_add_star].include? node.sexp_type
+            nodes.unshift node[2]
+            node = node[1]
+          elsif :args_new == node.sexp_type
+            break
+          end
         end
       end
     end
@@ -382,8 +389,12 @@ class Sexp
   #
   # @return [Sexp] method name node
   def method_name
-    if :def == sexp_type
+    case sexp_type
+    when :def
       self[1]
+    when :defs
+      self[3]
+    else
     end
   end
 
@@ -492,7 +503,7 @@ class Sexp
   def statements
     stmts = []
     node = case sexp_type
-           when :do_block
+           when :do_block, :brace_block
              self[2]
            when :bodystmt
              self[1]
@@ -750,7 +761,7 @@ class Sexp
   def to_s
     case sexp_type
     when :string_literal, :xstring_literal, :string_content, :const_ref, :symbol_literal, :symbol,
-         :args_add_block, :var_ref, :var_field,
+         :args_add_block, :var_ref, :vcall, :var_field,
          :@ident, :@tstring_content, :@const, :@ivar, :@kw, :@gvar, :@cvar
       self[1].to_s
     when :string_add
@@ -782,8 +793,19 @@ class Sexp
     end
   end
 
+  # check if the self node is a const.
   def const?
-    :@const == self.sexp_type || (:var_ref == self.sexp_type && :@const == self[1].sexp_type)
+    :@const == self.sexp_type || ([:var_ref, :vcall].include?(self.sexp_type) && :@const == self[1].sexp_type)
+  end
+
+  # true
+  def present?
+    true
+  end
+
+  # false
+  def blank?
+    false
   end
 
   # remove the line and column info from sexp.

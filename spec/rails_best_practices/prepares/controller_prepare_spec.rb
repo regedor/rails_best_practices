@@ -1,7 +1,9 @@
 require 'spec_helper'
 
 describe RailsBestPractices::Prepares::ControllerPrepare do
-  let(:runner) { RailsBestPractices::Core::Runner.new(:prepares => RailsBestPractices::Prepares::ControllerPrepare.new) }
+  let(:runner) { RailsBestPractices::Core::Runner.new(
+    :prepares => [RailsBestPractices::Prepares::ControllerPrepare.new, RailsBestPractices::Prepares::HelperPrepare.new]
+  ) }
 
   before :each do
     runner.whiny = true
@@ -100,6 +102,17 @@ describe RailsBestPractices::Prepares::ControllerPrepare do
         methods.get_methods("PostsController").map(&:method_name).should == ["index", "new", "create", "edit", "update", "destroy"]
       end
 
+      it "extend inherited_resources with all actions with no arguments" do
+        content =<<-EOF
+        class PostsController < InheritedResources::Base
+          actions :all
+        end
+        EOF
+        runner.prepare('app/controllers/posts_controller.rb', content)
+        methods = RailsBestPractices::Prepares.controller_methods
+        methods.get_methods("PostsController").map(&:method_name).should == ["index", "show", "new", "create", "edit", "update", "destroy"]
+      end
+
       it "DSL inherit_resources" do
         content =<<-EOF
         class PostsController
@@ -110,6 +123,24 @@ describe RailsBestPractices::Prepares::ControllerPrepare do
         methods = RailsBestPractices::Prepares.controller_methods
         methods.get_methods("PostsController").map(&:method_name).should == ["index", "show", "new", "create", "edit", "update", "destroy"]
       end
+    end
+  end
+
+  context "helpers" do
+    it "should add helper decendant" do
+      content =<<-EOF
+      module PostsHelper
+      end
+      EOF
+      runner.prepare('app/helpers/posts_helper.rb', content)
+      content =<<-EOF
+      class PostsController
+        include PostsHelper
+      end
+      EOF
+      runner.prepare('app/controllers/posts_controller.rb', content)
+      helpers = RailsBestPractices::Prepares.helpers
+      helpers.first.decendants.should == ["PostsController"]
     end
   end
 end

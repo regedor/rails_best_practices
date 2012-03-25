@@ -3,12 +3,12 @@ require 'rails_best_practices/prepares/model_prepare'
 require 'rails_best_practices/prepares/mailer_prepare'
 require 'rails_best_practices/prepares/schema_prepare'
 require 'rails_best_practices/prepares/controller_prepare'
+require 'rails_best_practices/prepares/route_prepare'
+require 'rails_best_practices/prepares/helper_prepare'
 
 module RailsBestPractices
   module Prepares
     class <<self
-      attr_writer :models, :model_associations, :model_attributes, :mailers
-
       def klasses
         models + mailers + controllers
       end
@@ -39,6 +39,18 @@ module RailsBestPractices
 
       def controller_methods
         @controller_methods ||= Core::Methods.new
+      end
+
+      def helpers
+        @helpers ||= Core::Helpers.new
+      end
+
+      def helper_methods
+        @helper_methods ||= Core::Methods.new
+      end
+
+      def routes
+        @routes ||= Core::Routes.new
       end
 
       # Clear all prepare objects.

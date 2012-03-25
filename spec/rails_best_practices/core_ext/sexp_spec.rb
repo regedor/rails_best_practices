@@ -48,13 +48,19 @@ describe Sexp do
     it "should get the call nodes with subject current_user" do
       nodes = []
       @node.grep_nodes(:sexp_type => :call, :subject => "current_user") { |node| nodes << node }
-      nodes.should == [s(:call, s(:var_ref, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21)))]
+      nodes.should == [s(:call, s(:vcall, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21)))]
     end
 
     it "should get the call nodes with different messages" do
       nodes = []
       @node.grep_nodes(:sexp_type => :call, :message => ["posts", "find"]) { |node| nodes << node }
-      nodes.should == [s(:call, s(:call, s(:var_ref, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21))), :".", s(:@ident, "find", s(2, 27))), s(:call, s(:var_ref, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21)))]
+      nodes.should == [s(:call, s(:call, s(:vcall, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21))), :".", s(:@ident, "find", s(2, 27))), s(:call, s(:vcall, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21)))]
+    end
+
+    it "should get the vcall node with to_s" do
+      nodes = []
+      @node.grep_nodes(:sexp_type => :vcall, :to_s => "current_user") { |node| nodes << node }
+      nodes.should == [s(:vcall, s(:@ident, "current_user", s(2, 8)))]
     end
   end
 
@@ -70,7 +76,7 @@ describe Sexp do
 
     it "should get first node with empty argument" do
       node = @node.grep_node(:sexp_type => :call, :subject => "current_user")
-      node.should == s(:call, s(:var_ref, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21)))
+      node.should == s(:call, s(:vcall, s(:@ident, "current_user", s(2, 8))), :".", s(:@ident, "posts", s(2, 21)))
     end
   end
 
@@ -221,7 +227,7 @@ describe Sexp do
       node.arguments.sexp_type.should == :args_add_block
     end
 
-    it "should get the arguments of method_add_args" do
+    it "should get the arguments of method_add_arg" do
       node = parse_content("User.find(:all)").grep_node(:sexp_type => :method_add_arg)
       node.arguments.sexp_type.should == :args_add_block
     end
@@ -243,6 +249,11 @@ describe Sexp do
     it "should get all arguments" do
       node = parse_content("puts 'hello', 'world'").grep_node(:sexp_type => :args_add_block)
       node.all.map(&:to_s).should == ["hello", "world"]
+    end
+
+    it "should get all arguments with &:" do
+      node = parse_content("user.posts.map(&:title)").grep_node(:sexp_type => :args_add_block)
+      node.all.map(&:to_s).should == ["title"]
     end
 
     it "no error for args_add_star" do
@@ -281,9 +292,14 @@ describe Sexp do
   end
 
   describe "method_name" do
-    it "should get the method name of defn" do
+    it "should get the method name of def" do
       node = parse_content("def show; end").grep_node(:sexp_type => :def)
       node.method_name.to_s.should == "show"
+    end
+
+    it "should get the method name of defs" do
+      node = parse_content("def self.find; end").grep_node(:sexp_type => :defs)
+      node.method_name.to_s.should == "find"
     end
   end
 
@@ -463,6 +479,11 @@ describe Sexp do
       node.to_object.should == ["first_name", "last_name"]
     end
 
+    it "should to array with symbols" do
+      node = parse_content("[:first_name, :last_name]").grep_node(:sexp_type => :array)
+      node.to_object.should == ["first_name", "last_name"]
+    end
+
     it "should to empty array" do
       node = parse_content("[]").grep_node(:sexp_type => :array)
       node.to_object.should == []
@@ -520,6 +541,20 @@ describe Sexp do
     it "should return false for ivar" do
       node = parse_content("@user.find").grep_node(:sexp_type => :@ivar)
       node.should_not be_const
+    end
+  end
+
+  describe "present?" do
+    it "should return true" do
+      node = parse_content("hello world")
+      node.should be_present
+    end
+  end
+
+  describe "blank?" do
+    it "should return false" do
+      node = parse_content("hello world")
+      node.should_not be_blank
     end
   end
 

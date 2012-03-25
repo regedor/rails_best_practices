@@ -22,14 +22,14 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec")
-  s.add_development_dependency("watchr")
   s.add_development_dependency("haml")
+  s.add_development_dependency("slim")
   s.add_development_dependency("bundler")
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.require_paths = ["lib"]
+  s.require_paths = ["lib", "assets"]
 
   s.post_install_message = <<-POST_INSTALL_MESSAGE
 #{"*" * 80}
@@ -39,6 +39,10 @@ Gem::Specification.new do |s|
   I highly recommend you browse the Rails Best Practices website first.
 
       http://rails-bestpractices.com
+
+  Please also try our online service
+
+      http://railsbp.com
 
   Enjoy!
 

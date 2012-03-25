@@ -16,6 +16,7 @@ module RailsBestPractices
       # @param [String] access control, public, protected or private
       def add_method(class_name, method_name, meta={}, access_control="public")
         return if class_name == ""
+        return if has_method?(class_name, method_name)
         methods(class_name) << Method.new(class_name, method_name, access_control, meta)
         if access_control == "public"
           @possible_methods[method_name] = false
@@ -74,7 +75,28 @@ module RailsBestPractices
         end
       end
 
-      # remomber the method name, the method is probably be used for the class' public method.
+      # Mark the method as public.
+      #
+      # @param [String] class name
+      # @param [String] method name
+      def mark_publicize(class_name, method_name)
+        method = get_method(class_name, method_name)
+        method.publicize if method
+      end
+
+      # Mark parent classs' method as public.
+      #
+      # @param [String] class name
+      # @param [String] method name
+      def mark_parent_class_methods_publicize(class_name, method_name)
+        klass = Prepares.klasses.find { |klass| klass.to_s == class_name }
+        if klass && klass.extend_class_name
+          mark_parent_class_methods_publicize(klass.extend_class_name, method_name)
+          mark_publicize(class_name, method_name)
+        end
+      end
+
+      # Remomber the method name, the method is probably be used for the class' public method.
       #
       # @param [String] method name
       def possible_public_used(method_name)
@@ -132,9 +154,14 @@ module RailsBestPractices
         @used = false
       end
 
-      # Mark this method as used.
+      # Mark the method as used.
       def mark_used
         @used = true
+      end
+
+      # Mark the method as public
+      def publicize
+        @access_control = "public"
       end
     end
   end

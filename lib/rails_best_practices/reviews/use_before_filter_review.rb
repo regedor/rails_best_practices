@@ -13,16 +13,11 @@ module RailsBestPractices
     #   check all first code line in method definitions (actions),
     #   if they are duplicated, then they should be moved to before_filter.
     class UseBeforeFilterReview < Review
+      interesting_nodes :class
+      interesting_files CONTROLLER_FILES
+
       def url
         "http://rails-bestpractices.com/posts/22-use-before_filter"
-      end
-
-      def interesting_nodes
-        [:class]
-      end
-
-      def interesting_files
-        CONTROLLER_FILES
       end
 
       def initialize(options = {})
@@ -39,7 +34,7 @@ module RailsBestPractices
         @first_sentences = {}
 
         node.body.statements.each do |statement_node|
-          break if :var_ref == statement_node.sexp_type && ["protected", "private"].include?(statement_node.to_s)
+          break if [:var_ref, :vcall].include?(statement_node.sexp_type) && ["protected", "private"].include?(statement_node.to_s)
           remember_first_sentence(statement_node) if :def == statement_node.sexp_type
         end
         @first_sentences.each do |first_sentence, def_nodes|

@@ -5,15 +5,10 @@ module RailsBestPractices
   module Prepares
     # Remember the mailer names.
     class MailerPrepare < Core::Check
-      include Core::Check::Klassable
+      include Core::Check::Classable
 
-      def interesting_nodes
-        [:class, :module]
-      end
-
-      def interesting_files
-        /#{MAILER_FILES}|#{MODEL_FILES}/
-      end
+      interesting_nodes :class
+      interesting_files MAILER_FILES, MODEL_FILES
 
       def initialize
         @mailers = Prepares.mailers

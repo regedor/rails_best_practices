@@ -19,23 +19,18 @@ module RailsBestPractices
     #
     #     match ':controller(/:action(/:id(.:format)))'
     class NotUseDefaultRouteReview < Review
+      interesting_nodes :command_call, :command
+      interesting_files ROUTE_FILES
+
       def url
         "http://rails-bestpractices.com/posts/12-not-use-default-route-if-you-use-restful-design"
-      end
-
-      def interesting_nodes
-        [:command_call, :command]
-      end
-
-      def interesting_files
-        ROUTE_FILES
       end
 
       # check all command call nodes, compare with rails2 default route
       def start_command_call(node)
         if "map" == node.subject.to_s && "connect" == node.message.to_s &&
-          (":controller/:action/:id" == node.arguments.all[0].to_s ||
-           ":controller/:action/:id.:format" == node.arguments.all[0].to_s)
+          (":controller/:action/:id" == node.arguments.all.first.to_s ||
+           ":controller/:action/:id.:format" == node.arguments.all.first.to_s)
           add_error "not use default route"
         end
       end
@@ -43,7 +38,7 @@ module RailsBestPractices
       # check all command nodes, compare with rails3 default route
       def start_command(node)
         if "match" == node.message.to_s &&
-          ":controller(/:action(/:id(.:format)))" == node.arguments.all[0].to_s
+          ":controller(/:action(/:id(.:format)))" == node.arguments.all.first.to_s
           add_error "not use default route"
         end
       end
