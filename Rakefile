@@ -18,7 +18,7 @@ end
 
 task :release => :build do
   puts "Tagging #{RailsBestPractices::VERSION}..."
-  system "git tag -a #{RailsBestPractices::VERSION} -m 'Tagging #{RailsBestPractices::VERSION}'"
+  system "git tag -a #{RailsBestPractices::VERSION}regedor -m 'Tagging #{RailsBestPractices::VERSION}regedor'"
   puts "Pushing to Github..."
   system "git push --tags"
   puts "Pushing to rubygems.org..."

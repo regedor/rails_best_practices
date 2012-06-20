@@ -2,14 +2,14 @@
 require File.expand_path("../lib/rails_best_practices/version", __FILE__)
 
 Gem::Specification.new do |s|
-  s.name        = "rails_best_practices"
+  s.name        = "rails_best_practices-gorgeouscode"
   s.version     = RailsBestPractices::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Richard Huang"]
-  s.email       = ["flyerhzm@gmail.com"]
+  s.authors     = ["Miguel Regedor", "Richard Huang"]
+  s.email       = ["miguelregedor@gmail.com"]
   s.homepage    = "http://rails-bestpractices.com"
   s.summary     = "a code metric tool for rails codes."
-  s.description = "a code metric tool for rails codes, written in Ruby."
+  s.description = "A fork of Richard Huang gem, I need to change it in order to use Master Thesis study (study.gorgeouscode.com). My changes to the gem are small, the credit for this amazing gem goes to Richard."
 
   s.required_rubygems_version = ">= 1.3.6"
 
